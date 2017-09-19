@@ -23,12 +23,37 @@ class User(db.Model):
     age = db.Column(db.Integer, nullable=True)
     zipcode = db.Column(db.String(15), nullable=True)
 
+    def __repr__(self):
+        """Provide helpful represtation when printed."""
 
-# Put your Movie and Rating model classes here.
+        return "<User user_id=%s email=%s>" % (self.user_id,
+                                               self.email)
 
+
+class Movie(db.Model):
+    """Movie of ratings website."""
+
+    __tablename__ = "movies"
+
+    movie_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    title = db.Column(db.String(1000), nullable=False)
+    released_at = db.Column(db.DateTime, nullable=True)
+    imbd_url = db.Column(db.String(1000), nullable=False)
+
+
+class Rating(db.Model):
+    """Rating of ratings website."""
+
+    __tablename__ = "ratings"
+
+    rating_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    movie_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+    score = db.Column(db.Integer, nullable=False)
 
 ##############################################################################
 # Helper functions
+
 
 def connect_to_db(app):
     """Connect the database to our Flask app."""
@@ -40,6 +65,7 @@ def connect_to_db(app):
     db.init_app(app)
 
 
+
 if __name__ == "__main__":
     # As a convenience, if we run this module interactively, it will leave
     # you in a state of being able to work with the database directly.
@@ -47,3 +73,4 @@ if __name__ == "__main__":
     from server import app
     connect_to_db(app)
     print "Connected to DB."
+
