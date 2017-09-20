@@ -34,6 +34,33 @@ def user_list():
     return render_template("user_list.html", users=users)
 
 
+@app.route("/users/<userid>")
+def user_details(userid):
+    """show the deatils for a given user id."""
+
+    #user = User.query.get(int(userid))
+    user = User.query.options(db.joinedload('ratings', 'movie')).get(int(userid))
+    # user = db.session.query(User.user_id,
+    #                         User.zipcode,
+    #                         User.age,
+    #                         Rating.score,
+    #                         Movie.title).filter(User.user_id == int(userid)).join(Rating, Movie).all()
+    # user = user_rating.query.get(int(userid))
+    print user
+    return render_template("user_details.html", user=user)
+
+
+@app.route("/movies")
+def movie_list():
+    """Show list of movies"""
+
+    movies = Movie.query.order_by('title').all()
+    return render_template("movie_list.html", movies=movies)
+
+
+
+
+
 @app.route("/register", methods=["GET"])
 def register_form():
 
