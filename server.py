@@ -36,16 +36,10 @@ def user_list():
 
 @app.route("/users/<userid>")
 def user_details(userid):
-    """show the deatils for a given user id."""
+    """show the details for a given user id."""
 
-    #user = User.query.get(int(userid))
     user = User.query.options(db.joinedload('ratings', 'movie')).get(int(userid))
-    # user = db.session.query(User.user_id,
-    #                         User.zipcode,
-    #                         User.age,
-    #                         Rating.score,
-    #                         Movie.title).filter(User.user_id == int(userid)).join(Rating, Movie).all()
-    # user = user_rating.query.get(int(userid))
+
     print user
     return render_template("user_details.html", user=user)
 
@@ -57,9 +51,45 @@ def movie_list():
     movies = Movie.query.order_by('title').all()
     return render_template("movie_list.html", movies=movies)
 
+@app.route("/movies/<movieid>")
+def movie_details(movieid):
+    """show the details for a given movie id."""
+
+    movie = Movie.query.options(db.joinedload('ratings', 'user')).get(int(movieid))
+
+    existing_rating = Rating.query.filter(Rating.movie_id == int(movieid),
+                                          Rating.user_id == session["user"]).first()
+
+    print movie
+    return render_template("movie_details.html", movie=movie, current_rating=existing_rating)
+
+@app.route("/movies/<movieid>", methods=["POST"])
+def rating_process(movieid):
+
+    input_rating = request.form.get('rating')
 
 
+    existing_rating = Rating.query.filter(Rating.movie_id == int(movieid),
+                                          Rating.user_id == session["user"]).first()
+    print existing_rating
 
+    if existing_rating:
+
+        existing_rating.score = input_rating
+        db.session.commit()
+
+        flash("Updated Rating")
+
+    else:
+        movie_rating = Rating(user_id=session["user"],
+                              movie_id=int(movieid),
+                              score=input_rating)
+
+        db.session.add(movie_rating)
+        db.session.commit()
+        flash("Rating Added")
+
+    return redirect("/movies/%s" % (movieid))
 
 @app.route("/register", methods=["GET"])
 def register_form():
@@ -111,7 +141,7 @@ def login_process():
         return redirect("/")
 
     if current_user is not None and current_user.password == input_password:
-        session["user"] = input_email
+        session["user"] = current_user.user_id
         flash("Logged In")
         return redirect("/")
     else:
